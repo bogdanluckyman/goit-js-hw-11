@@ -29,8 +29,7 @@ function loadMore() {
         .then(obj => {
             const { hits } = obj.data;
             if (hits.length === 0) {
-                Notiflix.Notify.failure("No more images available");
-                return;
+                throw new Error();
             }
             hits.forEach(item => createMarkup(item));
 
