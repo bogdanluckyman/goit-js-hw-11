@@ -3,11 +3,12 @@ import Notiflix from "notiflix";
 
 const form = document.querySelector('.search-form');
 const gallery = document.querySelector('.gallery');
-const loadBtn = document.querySelector('.load-more')
+const loadBtn = document.querySelector('.load-more');
 const URL = 'https://pixabay.com/api/';
 const KEY = '39849634-51b0690041743f79df8d2c395';
 const options = {
     params: {
+        key: KEY,
         image_type: 'photo',
         orientation: 'horizontal',
         safesearch: 'true',
@@ -16,11 +17,22 @@ const options = {
     }
 };
 let totalHits = 0;
-async function fetchImage(nameTag) {
-    return response = await axios.get(`${URL}?key=${KEY}&q=${nameTag}`, options)
-};
 
-loadBtn.addEventListener('click', loadMore)
+async function fetchImage(nameTag) {
+    try {
+        const response = await axios.get(URL, {
+            params: {
+                ...options.params,
+                q: nameTag
+            }
+        });
+        return response;
+    } catch (error) {
+        throw error;
+    }
+}
+
+loadBtn.addEventListener('click', loadMore);
 
 function loadMore() {
     const { searchQuery } = form.elements;
@@ -29,13 +41,13 @@ function loadMore() {
         .then(obj => {
             const { hits } = obj.data;
             if (hits.length === 0) {
-                throw new Error
+                throw new Error("No results found for your search query. Please try again.");
             }
             hits.forEach(item => createMarkup(item));
 
             if (totalHits > 0) {
-                options.params.page += 1; 
-                if (options.params.page * options.params.per_page >= totalHits) {                    
+                options.params.page += 1;
+                if (options.params.page * options.params.per_page >= totalHits) {
                     showElement(loadBtn, false);
                     Notiflix.Notify.info("We're sorry, but you've reached the end of search results.");
                 }
@@ -47,7 +59,6 @@ function loadMore() {
         });
 }
 
-
 function showElement(element, show) {
     if (show) {
         element.hidden = false;
@@ -56,7 +67,7 @@ function showElement(element, show) {
     }
 }
 
-form.addEventListener('submit', searchPhoto)
+form.addEventListener('submit', searchPhoto);
 
 function searchPhoto(evt) {
     evt.preventDefault();
@@ -67,14 +78,14 @@ function searchPhoto(evt) {
         .then(obj => {
             const { hits, totalHits: newTotalHits } = obj.data;
             if (hits.length === 0) {
-                throw new Error
+                throw new Error("No results found for your search query. Please try again.");
             }
             totalHits = newTotalHits;
             gallery.innerHTML = '';
-            options.params.page += 1; 
+            options.params.page += 1;
 
             hits.forEach(item => createMarkup(item));
-            
+
             if (options.params.page * options.params.per_page >= totalHits) {
                 showElement(loadBtn, false);
                 Notiflix.Notify.info("We're sorry, but you've reached the end of search results.");
@@ -85,27 +96,26 @@ function searchPhoto(evt) {
         .catch(() => Notiflix.Notify.failure("Sorry, there are no images matching your search query. Please try again."));
 }
 
-
 function createMarkup(params) {
-    const {webformatURL, largeImageURL, tags, likes, views, comments, downloads } = params;
+    const { webformatURL, tags, likes, views, comments, downloads } = params;
     const markup = `
     <div class="photo-card">
-    <img src="${webformatURL}" alt="${tags}" loading="lazy" />
-    <div class="info">
-    <p class="info-item">
-      <b>Likes ${likes}</b>
-    </p>
-    <p class="info-item">
-      <b>Views ${views}</b>
-    </p>
-    <p class="info-item">
-      <b>Comments ${comments}</b>
-    </p>
-    <p class="info-item">
-      <b>Downloads ${downloads}</b>
-    </p>
-    </div>
+        <img src="${webformatURL}" alt="${tags}" loading="lazy" />
+        <div class="info">
+            <p class="info-item">
+                <b>Likes ${likes}</b>
+            </p>
+            <p class="info-item">
+                <b>Views ${views}</b>
+            </p>
+            <p class="info-item">
+                <b>Comments ${comments}</b>
+            </p>
+            <p class="info-item">
+                <b>Downloads ${downloads}</b>
+            </p>
+        </div>
     </div>`
     gallery.insertAdjacentHTML('beforeend', markup);
-    showElement(loadBtn, true)
+    showElement(loadBtn, true);
 }
