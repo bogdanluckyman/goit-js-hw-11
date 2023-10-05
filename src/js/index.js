@@ -29,7 +29,7 @@ function loadMore() {
         .then(obj => {
             const { hits } = obj.data;
             if (hits.length === 0) {
-                throw new Error();
+                throw new Error
             }
             hits.forEach(item => createMarkup(item));
 
@@ -67,7 +67,7 @@ function searchPhoto(evt) {
         .then(obj => {
             const { hits, totalHits: newTotalHits } = obj.data;
             if (hits.length === 0) {
-                throw new Error();
+                throw new Error
             }
             totalHits = newTotalHits;
             gallery.innerHTML = '';
