@@ -1,5 +1,6 @@
-import axios from "axios";
 import Notiflix from "notiflix";
+import { fetchImage } from "./fetch";
+import { createMarkup } from "./markup";
 
 const form = document.querySelector('.search-form');
 const gallery = document.querySelector('.gallery');
@@ -18,20 +19,6 @@ const options = {
 };
 let totalHits = 0;
 
-async function fetchImage(nameTag) {
-    try {
-        const response = await axios.get(URL, {
-            params: {
-                ...options.params,
-                q: nameTag
-            }
-        });
-        return response;
-    } catch (error) {
-        throw error;
-    }
-}
-
 loadBtn.addEventListener('click', loadMore);
 
 function loadMore() {
@@ -39,18 +26,21 @@ function loadMore() {
 
     fetchImage(searchQuery.value)
         .then(obj => {
-            const { hits } = obj.data;
+            const { hits, totalHits: newTotalHits } = obj.data;
             if (hits.length === 0) {
                 throw new Error("No results found for your search query. Please try again.");
             }
-            hits.forEach(item => createMarkup(item));
 
-            if (totalHits > 0) {
+            hits.forEach(item => createMarkup(item));
+            totalHits = newTotalHits;
+
+            const totalPages = Math.ceil(totalHits / options.params.per_page);
+            if (options.params.page >= totalPages) {
+                showElement(loadBtn, false);
+                Notiflix.Notify.info("We're sorry, but you've reached the end of search results.");
+            } else {
                 options.params.page += 1;
-                if (options.params.page * options.params.per_page >= totalHits) {
-                    showElement(loadBtn, false);
-                    Notiflix.Notify.info("We're sorry, but you've reached the end of search results.");
-                }
+                showElement(loadBtn, true);
             }
         })
         .catch(error => {
@@ -66,7 +56,7 @@ function showElement(element, show) {
         element.hidden = true;
     }
 }
-
+showElement(loadBtn, false)
 form.addEventListener('submit', searchPhoto);
 
 function searchPhoto(evt) {
@@ -74,48 +64,39 @@ function searchPhoto(evt) {
     const { searchQuery } = evt.currentTarget.elements;
     options.params.page = 1;
 
-    fetchImage(searchQuery.value)
-        .then(obj => {
-            const { hits, totalHits: newTotalHits } = obj.data;
-            if (hits.length === 0) {
-                throw new Error("No results found for your search query. Please try again.");
-            }
-            totalHits = newTotalHits;
-            gallery.innerHTML = '';
+    const searchValue = searchQuery.value.trim(); 
+
+    if (searchValue === '') {
+        Notiflix.Notify.info("Please enter a search query.");
+        return;
+    }
+
+    fetchImage(searchValue)
+    .then(obj => {
+        const { hits, totalHits: newTotalHits } = obj.data;
+        if (hits.length === 0) {
+            throw new Error("No results found for your search query. Please try again.");
+        }
+ 
+        const totalPages = Math.ceil(newTotalHits / options.params.per_page);
+        if (options.params.page >= totalPages) {
+            options.params.page = totalPages;
+            showElement(loadBtn, false);
+            Notiflix.Notify.info("We're sorry, but you've reached the end of search results.");
+        } else {
             options.params.page += 1;
+            showElement(loadBtn, true);
+        }
 
-            hits.forEach(item => createMarkup(item));
-
-            if (options.params.page * options.params.per_page >= totalHits) {
-                showElement(loadBtn, false);
-                Notiflix.Notify.info("We're sorry, but you've reached the end of search results.");
-            } else {
-                showElement(loadBtn, true);
-            }
-        })
-        .catch(() => Notiflix.Notify.failure("Sorry, there are no images matching your search query. Please try again."));
+        totalHits = newTotalHits;
+        gallery.innerHTML = '';
+        hits.forEach(item => createMarkup(item));
+    })
+        .catch(() => {
+            gallery.innerHTML = '';
+            showElement(loadBtn, false);
+            Notiflix.Notify.failure("Sorry, there are no images matching your search query. Please try again.")
+        });
 }
 
-function createMarkup(params) {
-    const { webformatURL, tags, likes, views, comments, downloads } = params;
-    const markup = `
-    <div class="photo-card">
-        <img src="${webformatURL}" alt="${tags}" loading="lazy" />
-        <div class="info">
-            <p class="info-item">
-                <b>Likes ${likes}</b>
-            </p>
-            <p class="info-item">
-                <b>Views ${views}</b>
-            </p>
-            <p class="info-item">
-                <b>Comments ${comments}</b>
-            </p>
-            <p class="info-item">
-                <b>Downloads ${downloads}</b>
-            </p>
-        </div>
-    </div>`
-    gallery.insertAdjacentHTML('beforeend', markup);
-    showElement(loadBtn, true);
-}
+export { gallery, showElement, loadBtn, URL, options };
