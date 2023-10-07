@@ -18,30 +18,24 @@ const options = {
     }
 };
 let totalHits = 0;
+let totalPages = 1;
 
 loadBtn.addEventListener('click', loadMore);
 
 function loadMore() {
     const { searchQuery } = form.elements;
 
+    if (options.params.page >= totalPages) {
+        showElement(loadBtn, false);
+        Notiflix.Notify.info("We're sorry, but you've reached the end of search results.");
+        return;
+    }
+
     fetchImage(searchQuery.value)
         .then(obj => {
-            const { hits, totalHits: newTotalHits } = obj.data;
-            if (hits.length === 0) {
-                throw new Error("No results found for your search query. Please try again.");
-            }
-
+            const { hits } = obj.data;
             hits.forEach(item => createMarkup(item));
-            totalHits = newTotalHits;
-
-            const totalPages = Math.ceil(totalHits / options.params.per_page);
-            if (options.params.page >= totalPages) {
-                showElement(loadBtn, false);
-                Notiflix.Notify.info("We're sorry, but you've reached the end of search results.");
-            } else {
-                options.params.page += 1;
-                showElement(loadBtn, true);
-            }
+            options.params.page += 1;
         })
         .catch(error => {
             console.error(error);
@@ -51,12 +45,12 @@ function loadMore() {
 
 function showElement(element, show) {
     if (show) {
-        element.hidden = false;
+        element.style.display = "block";
     } else {
-        element.hidden = true;
+        element.style.display = "none";
     }
 }
-showElement(loadBtn, false)
+
 form.addEventListener('submit', searchPhoto);
 
 function searchPhoto(evt) {
@@ -78,11 +72,9 @@ function searchPhoto(evt) {
             throw new Error("No results found for your search query. Please try again.");
         }
  
-        const totalPages = Math.ceil(newTotalHits / options.params.per_page);
-        if (options.params.page >= totalPages) {
-            options.params.page = totalPages;
+        totalPages = Math.ceil(newTotalHits / options.params.per_page);
+        if (totalPages <= 1) { // Додайте перевірку на одну сторінку
             showElement(loadBtn, false);
-            Notiflix.Notify.info("We're sorry, but you've reached the end of search results.");
         } else {
             options.params.page += 1;
             showElement(loadBtn, true);
