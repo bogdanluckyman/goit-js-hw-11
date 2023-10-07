@@ -25,7 +25,7 @@ loadBtn.addEventListener('click', loadMore);
 function loadMore() {
     const { searchQuery } = form.elements;
 
-    if (options.params.page >= totalPages) {
+    if (options.params.page > totalPages) {
         showElement(loadBtn, false);
         Notiflix.Notify.info("We're sorry, but you've reached the end of search results.");
         return;
@@ -34,8 +34,15 @@ function loadMore() {
     fetchImage(searchQuery.value)
         .then(obj => {
             const { hits } = obj.data;
-            hits.forEach(item => createMarkup(item));
-            options.params.page += 1;
+            
+            if (options.params.page === totalPages) {
+                hits.forEach(item => createMarkup(item));
+                showElement(loadBtn, false);
+                Notiflix.Notify.info("We're sorry, but you've reached the end of search results.");
+            } else {
+                hits.forEach(item => createMarkup(item));
+                options.params.page += 1;
+            }
         })
         .catch(error => {
             console.error(error);
@@ -44,11 +51,7 @@ function loadMore() {
 }
 
 function showElement(element, show) {
-    if (show) {
-        element.style.display = "block";
-    } else {
-        element.style.display = "none";
-    }
+    element.hidden = !show;
 }
 
 form.addEventListener('submit', searchPhoto);
@@ -73,22 +76,24 @@ function searchPhoto(evt) {
         }
  
         totalPages = Math.ceil(newTotalHits / options.params.per_page);
-        if (totalPages <= 1) { // Додайте перевірку на одну сторінку
-            showElement(loadBtn, false);
-        } else {
-            options.params.page += 1;
-            showElement(loadBtn, true);
-        }
 
         totalHits = newTotalHits;
         gallery.innerHTML = '';
         hits.forEach(item => createMarkup(item));
-    })
-        .catch(() => {
-            gallery.innerHTML = '';
+
+        if (totalPages <= 1) {
             showElement(loadBtn, false);
-            Notiflix.Notify.failure("Sorry, there are no images matching your search query. Please try again.")
-        });
+            Notiflix.Notify.info("We're sorry, but you've reached the end of search results.");
+        } else {
+            options.params.page += 1;
+            showElement(loadBtn, true);
+        }
+    })
+    .catch(() => {
+        gallery.innerHTML = '';
+        showElement(loadBtn, false);
+        Notiflix.Notify.failure("Sorry, there are no images matching your search query. Please try again.")
+    });
 }
 
 export { gallery, showElement, loadBtn, URL, options };
