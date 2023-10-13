@@ -1,6 +1,13 @@
 import Notiflix from "notiflix";
 import { fetchImage } from "./fetch";
 import { createMarkup } from "./markup";
+import SimpleLightbox from "simplelightbox";
+import "simplelightbox/dist/simple-lightbox.min.css";
+
+const lightbox = new SimpleLightbox('.gallery a', {
+    captionsData: 'alt',
+    captionDelay: 250
+});
 
 const form = document.querySelector('.search-form');
 const gallery = document.querySelector('.gallery');
@@ -40,7 +47,10 @@ function loadMore() {
                 showElement(loadBtn, false);
                 Notiflix.Notify.info("We're sorry, but you've reached the end of search results.");
             } else {
-                hits.forEach(item => createMarkup(item));
+                hits.forEach(item => {
+            createMarkup(item)
+            lightbox.refresh()
+            });
                 options.params.page += 1;
             }
         })
@@ -79,7 +89,11 @@ function searchPhoto(evt) {
 
         totalHits = newTotalHits;
         gallery.innerHTML = '';
-        hits.forEach(item => createMarkup(item));
+        hits.forEach(item => {
+            createMarkup(item)
+            lightbox.refresh()
+        });
+        
 
         if (totalPages <= 1) {
             showElement(loadBtn, false);

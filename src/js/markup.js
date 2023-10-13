@@ -2,7 +2,7 @@ import { gallery, showElement, loadBtn } from "./index";
 
 export function createMarkup(params) {
     const { webformatURL,largeImageURL, tags, likes, views, comments, downloads } = params;
-    const markup = `
+    const markup = `<a href="${largeImageURL}" class="image-card">
     <div class="photo-card ">
         <img src="${webformatURL}" alt="${tags}" loading="lazy" />
         <div class="info">
@@ -19,7 +19,7 @@ export function createMarkup(params) {
                 <b>Downloads ${downloads}</b>
             </p>
         </div>
-    </div>`
+    </div></a>`
     gallery.insertAdjacentHTML('beforeend', markup);
     showElement(loadBtn, true);
 }

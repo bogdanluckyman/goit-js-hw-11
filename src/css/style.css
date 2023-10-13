@@ -1,19 +1,27 @@
-.gallery {
-  padding: 0 20px;
-  margin: 0;
-  display: flex;
-  flex-wrap: wrap;
-}
-
 img {
   box-sizing: border-box;
   width: 350px;
   height: 300px;
 }
+p {
+  margin: 0;
+  padding: 0;
+}
+a {
+  text-decoration: none;
+  list-style: none;
+}
+
+.gallery {
+  padding: 0 20px;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
 
 .photo-card {
   width: 25%;
-  margin: 15px 0;
 }
 
 .form-box {
@@ -29,6 +37,13 @@ img {
   background-color: orange;
 }
 
-p {
-  margin: 0;
+.image-card {
+  box-shadow: 0px 1px 6px rgba(46, 47, 66, 0.08),
+    0px 1px 1px rgba(46, 47, 66, 0.16), 0px 2px 1px rgba(46, 47, 66, 0.08);
+  border-radius: 0px 0px 5px 5px;
 }
+
+/* .info {
+  display: flex;
+
+} */
